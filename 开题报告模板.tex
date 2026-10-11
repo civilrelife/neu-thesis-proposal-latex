@@ -68,6 +68,8 @@
   }%
 }
 \setmainfont{Times New Roman}
+% 中文引号“”‘’必须归入 CJK 字符类，否则会被排成 Times（xeCJK 默认把它们当西文标点）
+\xeCJKDeclareCharClass{CJK}{"2018 -> "201D}
 \xeCJKDeclareCharClass{CJK}{"2460 -> "24FF}
 \newcommand{\songbf}{\CJKfamily{zhsongbf}\bfseries}
 
