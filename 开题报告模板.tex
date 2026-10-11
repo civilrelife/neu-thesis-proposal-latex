@@ -76,6 +76,19 @@
 \setlength{\parskip}{2pt}
 \setlength{\emergencystretch}{3em}
 \renewcommand{\arraystretch}{1.15}
+% ===== 页码：照官方模板（Times 10.6pt，紧贴文字区底部，封面与填表说明页不编号）=====
+% 页码与框线留出自然间距（\footskip 越大离框越远；21pt ≈ LaTeX 惯用页脚位置）
+\setlength{\footskip}{21pt}
+% 模板：封面与填表说明页不编号，立论依据页起算为 1 → 只改显示值（物理页 -2），
+% 背景框判断也走同一个 \\curpage，保证两者永远一致（切勿用 \\setcounter{page}{1}）
+\newcommand{\curpage}{\number\numexpr\value{page}-1\relax}
+\renewcommand{\thepage}{\curpage}
+\makeatletter
+\renewcommand{\ps@plain}{%
+  \renewcommand{\@oddhead}{}\renewcommand{\@evenhead}{}%
+  \renewcommand{\@oddfoot}{\hfil{\normalfont\fontsize{10.6pt}{13pt}\selectfont\thepage}\hfil}%
+  \renewcommand{\@evenfoot}{\@oddfoot}}
+\makeatother
 \pagestyle{plain}
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
@@ -97,12 +110,12 @@
 
 % 整页背景框：第 #1~#2 页画框；首页顶部低 20pt（让 栏标题 留在框外）
 \newcommand{\drawboxframe}[2]{%
-  \ifnum\value{page}<\getpagerefnumber{#1}\relax\else
-  \ifnum\value{page}>\getpagerefnumber{#2}\relax\else
-    \ifnum\value{page}=\getpagerefnumber{#1}\relax
-      \AtTextLowerLeft{\hspace*{-9pt}\raisebox{-4pt}{\framebox(\dimexpr\textwidth+18pt\relax,\dimexpr\textheight-19pt\relax){}}}%
+  \ifnum\curpage<\getpagerefnumber{#1}\relax\else
+  \ifnum\curpage>\getpagerefnumber{#2}\relax\else
+    \ifnum\curpage=\getpagerefnumber{#1}\relax
+      \AtTextLowerLeft{\hspace*{-9pt}\framebox(\dimexpr\textwidth+18pt\relax,\dimexpr\textheight-19pt\relax){}}%
     \else
-      \AtTextLowerLeft{\hspace*{-9pt}\raisebox{-4pt}{\framebox(\dimexpr\textwidth+18pt\relax,\dimexpr\textheight+4pt\relax){}}}%
+      \AtTextLowerLeft{\hspace*{-9pt}\framebox(\dimexpr\textwidth+18pt\relax,\textheight){}}%
     \fi
   \fi\fi}
 \AddToShipoutPictureBG{%
@@ -142,6 +155,7 @@
 
 % ==================== 填表说明 ====================
 \newpage
+\thispagestyle{empty}% 照官方模板：封面与填表说明页不显示页码
 \begin{center}{\songti\fontsize{23.5pt}{30pt}\selectfont 填表说明}\end{center}
 \vspace{0.7cm}
 {\songti\fontsize{14.5pt}{22pt}\selectfont
