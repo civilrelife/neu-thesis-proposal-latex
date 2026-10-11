@@ -1,0 +1,17 @@
+﻿# LaTeX 编译产物
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+# 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+# 生成的 PDF（保留 preview/ 下的预览）
+/开题报告模板.pdf

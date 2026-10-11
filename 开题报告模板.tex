@@ -1,0 +1,275 @@
+% !TEX program = xelatex
+% ============================================================================
+%  东北大学机械工程与自动化学院 · 硕士学位论文或实践成果开题报告
+%  LaTeX 空白模板（排版依据学院官方 Word 模板「附件6」逐项实测对齐）
+%
+%  一、怎么用
+%    1. 全局替换 @@...@@ 占位符：封面 7 个字段 + 五个栏目的正文
+%    2. 用 XeLaTeX 编译两遍（必须 XeLaTeX，不能 pdfLaTeX）：
+%         xelatex 开题报告模板.tex
+%       或双击 重新编译.bat
+%    3. 想要网页端编辑：python latex_web_editor.py → 浏览器开 http://127.0.0.1:8766/
+%    4. 上传 Overleaf：整包 zip → New Project → Upload Project → Compiler 选 XeLaTeX
+%
+%  二、排版规格（已与官方模板实测对齐，一般不要改）
+%    页边距：上 2.50cm / 下 2.10cm / 左右 2.00cm（＝模板 70.9/59.5/56.7pt）
+%    封面：学号 黑体四号；标题 黑体二号；字段名与值 宋体三号加粗（坐标逐点对齐）
+%    五栏：栏标题在框外（黑体小四），提示行在框内（黑体小四）
+%          框线不是表格线，而是用 eso-pic 画的「整页背景框」——所以每页都框满整页
+%    工作计划：黑体五号表头，5 列
+%    正文：小四宋体，行距 1.25
+%    字体回退：Windows 用宋体/黑体；Overleaf 等无 Windows 字体时自动用 Fandol
+%
+%  三、目录约定
+%    assets/template_img0.jpeg  校徽（勿删）
+%    figs/                      放你自己的插图
+% ============================================================================
+\documentclass[12pt,a4paper]{ctexart}
+
+\usepackage[top=2.50cm,bottom=2.10cm,left=2.00cm,right=2.00cm]{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{makecell}
+\usepackage{indentfirst}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xeCJK}
+\usepackage{eso-pic}
+\usepackage{refcount}
+\usepackage{calc}
+\usepackage{needspace}
+
+% 字体：本机用 Windows 宋体/黑体；无 Windows 字体（Overleaf/Linux）时自动回退
+% 注意：回退分支**不依赖任何粗体字体文件**（Overleaf 的 TeX Live 里没有 FandolSong-Bold），
+%      全部靠 AutoFakeBold 生成伪粗，避免 "font cannot be found" 报错
+\IfFontExistsTF{SimSun}{%
+  \setCJKmainfont{SimSun}[BoldFont=SimSun, BoldFeatures={AutoFakeBold=2.5}, FakeBold=2.5, ItalicFont=KaiTi]
+  \setCJKsansfont{SimHei}
+  \setCJKmonofont{FangSong}
+  \setCJKfamilyfont{zhsongbf}[AutoFakeBold=3]{SimSun}
+}{%
+  \IfFontExistsTF{FandolSong-Regular.otf}{%
+    \setCJKmainfont{FandolSong-Regular.otf}[AutoFakeBold=2.5, ItalicFont=FandolKai-Regular.otf]
+    \setCJKsansfont{FandolHei-Regular.otf}
+    \setCJKmonofont{FandolFang-Regular.otf}
+    \setCJKfamilyfont{zhsongbf}[AutoFakeBold=3]{FandolSong-Regular.otf}
+    % 显式绑定 ctex 的 \songti/\heiti/\kaishu，不再依赖 ctex 的平台字体探测
+    \setCJKfamilyfont{zhsong}{FandolSong-Regular.otf}
+    \setCJKfamilyfont{zhhei}{FandolHei-Regular.otf}
+    \setCJKfamilyfont{zhkai}{FandolKai-Regular.otf}
+    \renewcommand{\songti}{\CJKfamily{zhsong}}
+    \renewcommand{\heiti}{\CJKfamily{zhhei}}
+    \renewcommand{\kaishu}{\CJKfamily{zhkai}}
+  }{%
+    \setCJKmainfont{Noto Serif CJK SC}[AutoFakeBold=2.5]
+    \setCJKsansfont{Noto Sans CJK SC}
+    \setCJKmonofont{Noto Sans Mono CJK SC}
+    \setCJKfamilyfont{zhsongbf}[AutoFakeBold=3]{Noto Serif CJK SC}
+  }%
+}
+\setmainfont{Times New Roman}
+\xeCJKDeclareCharClass{CJK}{"2460 -> "24FF}
+\newcommand{\songbf}{\CJKfamily{zhsongbf}\bfseries}
+
+\linespread{1.25}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.15}
+\pagestyle{plain}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\BOXW}{\dimexpr\linewidth-2\tabcolsep-2\arrayrulewidth\relax}
+\newcommand{\WPW}{\dimexpr\linewidth-10\tabcolsep-6\arrayrulewidth\relax}
+\newcommand{\BUDW}{\dimexpr\linewidth-10\tabcolsep-6\arrayrulewidth\relax}
+
+% ===== 封面字段行：缩进＋16pt＋值写在横线上 =====
+\newlength{\labw}
+\newcommand{\formline}[3]{%
+  \settowidth{\labw}{\zihao{3}#2：}%
+  \noindent\hspace*{#1}{\zihao{3}\songbf #2：}%
+  \underline{\makebox[\dimexpr\linewidth-#1-\labw\relax][l]{\hspace{0.6em}\zihao{3}\songbf #3}}\\[20pt]}
+
+% ===== 五栏：标题在框外；提示行在框内；框线由整页背景框绘制 =====
+\newcommand{\boxtitle}[1]{\noindent{\heiti #1}\par\vspace{4pt}}
+\newcommand{\boxprompt}[1]{\needspace{5\baselineskip}\noindent{\heiti #1}\par\vspace{5pt}}
+\newcommand{\boxmidline}{\vspace{8pt}\noindent\makebox[0pt][l]{\hspace*{-9pt}\rule{\dimexpr\textwidth+18pt\relax}{0.4pt}}\par\vspace{10pt}}
+
+% 整页背景框：第 #1~#2 页画框；首页顶部低 20pt（让 栏标题 留在框外）
+\newcommand{\drawboxframe}[2]{%
+  \ifnum\value{page}<\getpagerefnumber{#1}\relax\else
+  \ifnum\value{page}>\getpagerefnumber{#2}\relax\else
+    \ifnum\value{page}=\getpagerefnumber{#1}\relax
+      \AtTextLowerLeft{\hspace*{-9pt}\raisebox{-4pt}{\framebox(\dimexpr\textwidth+18pt\relax,\dimexpr\textheight-19pt\relax){}}}%
+    \else
+      \AtTextLowerLeft{\hspace*{-9pt}\raisebox{-4pt}{\framebox(\dimexpr\textwidth+18pt\relax,\dimexpr\textheight+4pt\relax){}}}%
+    \fi
+  \fi\fi}
+\AddToShipoutPictureBG{%
+  \drawboxframe{bx1s}{bx1e}\drawboxframe{bx2s}{bx2e}%
+  \drawboxframe{bx3s}{bx3e}\drawboxframe{bx4s}{bx4e}}
+  \newenvironment{hangingrefs}
+  {\par\setlength{\hangindent}{1.5em}\setlength{\parindent}{0pt}}
+  {\par}
+
+\begin{document}
+
+% ==================== 封面 ====================
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{-25pt}
+\begin{flushright}{\heiti\zihao{4} 学号：@@学号@@}\end{flushright}
+\vspace{0.64cm}
+\begin{center}
+\includegraphics[width=6.84cm]{assets/template_img0.jpeg}\\[1.30cm]
+{\zihao{2}\heiti 硕士学位论文或实践成果开题报告}
+\end{center}
+\vspace{3.85cm}
+
+\formline{80.3pt}{论文或实践成果题目}{@@论文题目@@}
+\formline{112.4pt}{姓\hspace{0.9em}名}{@@姓名@@}
+\formline{117pt}{所属学科}{@@学科专业@@}
+\formline{117pt}{学院（部）}{@@学院（部）@@}
+\formline{117pt}{导\hspace{0.9em}师}{@@导师@@}
+\formline{117pt}{副导师}{@@无则填“无”@@}
+
+\vspace{63pt}
+\begin{center}
+{\zihao{3}\songbf 东北大学研究生院}\\[10pt]
+{\zihao{3}\songbf 20XX 年\hspace{0.35em}XX 月\hspace{0.35em}XX日}
+\end{center}
+\end{titlepage}
+
+% ==================== 填表说明 ====================
+\newpage
+\begin{center}{\songti\fontsize{23.5pt}{30pt}\selectfont 填表说明}\end{center}
+\vspace{0.7cm}
+{\songti\fontsize{14.5pt}{22pt}\selectfont
+\begin{enumerate}\setlength{\itemsep}{0.45em}
+\item 本表一、二、三、四、五项在导师指导下准确、完整填写。
+\item 学生在通过开题后一周内将该材料交到所在学院（部），并将电子版上传至研究生管理信息系统。
+\item 学生入学后第三学期应完成论文或实践成果开题报告，按有关规定，没有完成开题报告的学生不能申请论文答辩。
+\end{enumerate}
+}
+
+% ==================== 一、立论依据 ====================
+\newpage
+\boxtitle{一、立论依据}
+\label{bx1s}
+\boxprompt{课题来源、选题依据和背景情况、课题研究目的、理论意义和实际应用价值}
+@@一、立论依据正文（写完后删掉下面这段提示）@@
+
+%% ——————————————————————————————
+%% 写作提示（交稿前请删除本段注释）：
+%% （1）课题来源：课题来自本人岗位实践，还是导师课题？
+%% （2）选题依据和背景情况：建议分"（1）政策背景""（2）现实背景"——
+%%      政策背景要写到文号（如 国发〔2024〕7 号）；现实背景要有数据。
+%% （3）课题研究目的：用"回答三个相互衔接的管理问题"这类句式点明目标。
+%% （4）理论意义和实际应用价值：分（1）（2）（3），每条一个论点 + 一句支撑。
+%% 插图（可选）：图片放 figs/ 目录，然后插入：
+%%   \begin{center}\includegraphics[width=0.80\linewidth]{figs/你的图.png}\\[6pt]
+%%   图1　图题（数据来源：……）\end{center}
+%% ——————————————————————————————
+\label{bx1e}
+
+% ==================== 二、文献综述 ====================
+\newpage
+\boxtitle{二、文献综述}
+\label{bx2s}
+\boxprompt{国内外研究现状、发展动态；所阅文献的查阅范围及手段}
+@@二、文献综述正文@@
+
+%% ——————————————————————————————
+%% 写作提示：建议分五节
+%%   （一）所阅文献的查阅范围及手段（数据库、检索词、筛选标准、纳入结果）
+%%   （二）设备更新决策研究现状（国外 / 国内）
+%%   （三）环卫设备管理研究现状（国外 / 国内）
+%%   （四）设备健康管理与预测性维护研究现状
+%%   （五）总体评述与本文切入点
+%% 每节末给"评述"，不要只罗列文献；引用用顺序号 [1][2]…
+%% ——————————————————————————————
+\label{bx2e}
+
+% ==================== 三、研究内容 ====================
+\newpage
+\boxtitle{三、研究内容}
+\label{bx3s}
+\boxprompt{1．研究构想与思路、主要研究内容及拟解决的关键技术}
+@@三、研究内容（1）研究构想与思路、主要研究内容及拟解决的关键技术@@
+
+%% ——————————————————————————————
+%% 写作提示：（1）研究构想与基本思路（2）主要研究内容——此处放论文三级目录
+%%   （3）拟解决的关键技术（4）研究特色与创新点
+%% 需要分隔线时用 \boxmidline（一条贯通整个框宽的横线）
+%% ——————————————————————————————
+\boxprompt{2．拟采取的研究方法、技术路线、实施方案及可行性分析}
+@@三、研究内容（2）拟采取的研究方法、技术路线、实施方案及可行性分析@@
+
+%% ——————————————————————————————
+%% 写作提示：（1）研究方法（2）技术路线（3）实施方案（4）可行性分析
+%%   可行性建议从"数据可行性 / 方法可行性 / 实施条件可行性 / 时间可行性"四条写
+%% ——————————————————————————————
+\label{bx3e}
+
+% ==================== 四、研究基础 ====================
+\newpage
+\boxtitle{四、研究基础}
+\label{bx4s}
+\boxprompt{1．所需实验手段、研究条件和实验条件 }
+@@四、研究基础（1）所需实验手段、研究条件和实验条件@@
+
+%% 写作提示：写清"已有条件"与"缺口"，缺口要说明如何解决。
+\boxprompt{2．所需经费，包含经费来源、开支预算（工程设备、材料须填写名称、规格、数量）}
+@@四、研究基础（2）所需经费说明@@
+
+%% ——— 经费预算表（行数可自行增删）———
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}p{0.055\BUDW}|p{0.15\BUDW}|p{0.34\BUDW}|>{\centering\arraybackslash}p{0.11\BUDW}|p{0.34\BUDW}|}
+\hline
+序号 & 支出科目 & 名称、规格、数量 & 金额（元） & 说明 \\
+\hline
+1 & @@科目@@ & @@名称、规格、数量@@ & @@金额@@ & @@说明@@ \\
+\hline
+2 &  &  &  &  \\
+\hline
+3 &  &  &  &  \\
+\hline
+\multicolumn{3}{|c|}{{\heiti 合计}} & @@合计@@ &  \\
+\hline
+\end{tabular}
+\end{center}
+\label{bx4e}
+
+% ==================== 五、工作计划（这一栏本身就是表格）====================
+\newpage
+\noindent{\heiti 五、工作计划}\par\vspace{3pt}
+\begin{longtable}{|>{\centering\arraybackslash}p{0.07\WPW}|L{0.35\WPW}|>{\centering\arraybackslash}p{0.13\WPW}|L{0.19\WPW}|L{0.26\WPW}|}
+\hline
+{\heiti\zihao{5} 序号} & {\heiti\zihao{5} 阶段及内容} & \makecell{{\heiti\zihao{5} 工作量估计}\\{\heiti\zihao{5} （时数）}} & {\heiti\zihao{5} 起止日期} & {\heiti\zihao{5} 阶段成果形式}\\
+\hline
+\endfirsthead
+\hline
+{\heiti\zihao{5} 序号} & {\heiti\zihao{5} 阶段及内容} & \makecell{{\heiti\zihao{5} 工作量估计}\\{\heiti\zihao{5} （时数）}} & {\heiti\zihao{5} 起止日期} & {\heiti\zihao{5} 阶段成果形式}\\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+1 & @@阶段及内容@@ & @@时数@@ & @@起止日期@@ & @@阶段成果形式@@ \\
+\hline
+2 &  &  &  &  \\
+\hline
+3 &  &  &  &  \\
+\hline
+4 &  &  &  &  \\
+\hline
+\hline
+\multicolumn{3}{|c|}{{\heiti 合计}} & @@总时数@@ & \\
+\hline
+\end{longtable}
+
+\vspace{6pt}
+\noindent @@备注：如“工作量按每周投入约 20 小时、周期约 13 个月估算。”@@
+
+\end{document}
